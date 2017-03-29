@@ -3,21 +3,28 @@
 
 #include <vector>
 #include <utility>
-#include </usr/include/eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <iostream>
 #include <random>
 #include <chrono>
 #include <exception>
+#include <fstream>
+#include <sstream>
 
 class Protograph{
 	public:
 		/* Constructors */
 		Protograph();
 		Protograph(const Eigen::MatrixXi &);
+		Protograph(const std::string &);
 		Protograph(const Eigen::MatrixXi &, const std::vector<bool> &);
 		Protograph(const Eigen::MatrixXi &, const std::vector<unsigned int> &);
 
 		/* Other functions */
+		void readFile(const std::string &);
+		void saveFile(const std::string &);
+		void setPuncturedVNs(const std::vector<bool> &);
+		void setPuncturedVNs(const std::vector<unsigned int> &);
 		void lift(const unsigned int &, const unsigned int &, Eigen::MatrixXi &H);
 		void lift(const unsigned int &, Eigen::MatrixXi &H);
 	private:
@@ -58,6 +65,21 @@ class liftexc : public std::exception
   virtual const char* what() const throw()
   {
     return "Lifting failed!";
+  }
+};
+
+class PGFileFailure : public std::exception
+{
+public:
+	const std::string str;
+	PGFileFailure(const std::string &str_in) : str(str_in)
+	{
+
+	}
+  virtual const char* what() const throw()
+  {
+  	std::string msg = "The file " + str + " does not contain a valid protograph.";
+    return msg.c_str();
   }
 };
 

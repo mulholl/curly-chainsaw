@@ -1,5 +1,6 @@
 #include <iostream>
-#include </usr/include/eigen3/Eigen/Dense>
+// #include </usr/include/eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "ProtographClass.hpp"
 
 using namespace std;
@@ -10,11 +11,15 @@ int main(void)
 
 	Eigen::MatrixXi B(3, 6);
 	Eigen::MatrixXi H;
-	B << 1 , 2 , 2 , 1 , 1 , 0 , 2 , 1 , 2 , 1 , 1 , 0 , 1 , 1 , 0 , 0 , 0 , 1;
 
-	cout << "B = \n" << B << endl;
+	P = Protograph("test2.txt");
+	P.saveFile("test3.txt");
 
-	P = Protograph(B);
+	// B << 1 , 2 , 2 , 1 , 1 , 0 , 2 , 1 , 2 , 1 , 1 , 0 , 1 , 1 , 0 , 0 , 0 , 1;
+
+	// cout << "B = \n" << B << endl;
+
+	// P = Protograph(B);
 
 	for (unsigned int i = 0; i < 1; i++)
 	{

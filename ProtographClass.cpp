@@ -14,7 +14,7 @@ Protograph::Protograph() : BM(MatrixXi(0,0)), numVNs(0), numCNs(0){
 /* 	Constructor
 	Arguments:
 		Input:
-			const MatrixXi &B 	-	The base matrix of the protograph
+			const Eigen::MatrixXi &B 	-	The base matrix of the protograph
 */
 Protograph::Protograph(const MatrixXi &B) : BM(B), numVNs(B.cols()), numCNs(B.rows()) {
 	symbolsToTransmit.clear();
@@ -27,11 +27,109 @@ Protograph::Protograph(const MatrixXi &B) : BM(B), numVNs(B.cols()), numCNs(B.ro
 /* 	Constructor
 	Arguments:
 		Input:
-			const MatrixXi &B 	-	The base matrix of the protograph
-			const vector<bool> &T 		-	A vector containing one boolean value for 
-											each VN of the protograph whose value is TRUE
-											if the bit associated with that is transmitted
-											or FALSE if that bit is punctured
+			const std::string &fn 	- 	The name of the file containing the protograph
+*/
+Protograph::Protograph(const string &fn)
+{
+	readFile(fn);
+}
+
+void Protograph::readFile(const string &fn)
+{
+	ifstream ifs(fn, ios::in);
+	istringstream iss;
+	string str;
+
+	if (ifs.fail())
+	{
+		throw PGFileFailure(fn);
+	}
+
+	unsigned int cols_this_row = 0;
+	unsigned int cols = 0;
+	unsigned int rows = 0;
+	unsigned int val;
+
+	unsigned int CN = 0, VN = 0;
+
+	while (getline(ifs, str))
+	{
+		cols_this_row = 0;
+
+		iss.str(str);
+
+		while (iss >> val)
+		{
+			cols_this_row++;
+		}
+
+		cols = (cols == 0) ? cols_this_row : cols;
+		if (cols)
+		{
+			if (cols_this_row == cols) 
+			{
+				cols = cols_this_row;
+				rows++;
+			}
+			else if (cols_this_row)
+			{
+				throw PGFileFailure(fn);
+			}
+		}
+
+		iss.clear();
+	}
+
+	ifs.clear();
+	ifs.seekg(0, ios::beg);
+
+	numCNs = rows;
+	numVNs = cols;
+	BM.resize(numCNs, numVNs);
+
+	while (ifs >> BM(CN, VN))
+	{
+		if (++VN == numVNs)
+		{
+			VN = 0;
+			if (++CN == numCNs)
+			{
+				break;
+			}
+		}
+	}
+
+	ifs.close();
+}
+
+void Protograph::saveFile(const string &fn)
+{
+	ofstream ofs(fn, ios::out);
+
+	for (unsigned int CN = 0; CN < numCNs; CN++)
+	{
+		for (unsigned int VN = 0; VN < numVNs-1; VN++)
+		{
+			ofs << BM(CN, VN) << " ";
+		}
+		if (numVNs)
+		{
+			ofs << BM(CN, numVNs-1) << "\n";
+		}
+	}
+
+	ofs.flush();
+	ofs.close();
+}
+
+/* 	Constructor
+	Arguments:
+		Input:
+			const Eigen::MatrixXi &B 		-	The base matrix of the protograph
+			const std::vector<bool> &T 		-	A vector containing one boolean value for 
+												each VN of the protograph whose value is TRUE
+												if the bit associated with that is transmitted
+												or FALSE if that bit is punctured
 */
 Protograph::Protograph(const MatrixXi &B, const vector<bool> &T) : BM(B), numVNs(B.cols()), numCNs(B.rows()){
 	symbolsToTransmit = T;
@@ -58,10 +156,10 @@ Protograph::Protograph(const MatrixXi &B, const vector<bool> &T) : BM(B), numVNs
 /* 	Constructor
 	Arguments:
 		Input:
-			const MatrixXi &B 		-	The base matrix of the protograph
-			const vector<unsigned int> &P 	-	A vector containing the indices of each
-												of the VNs of the protograph that are
-												punctured
+			const Eigen::MatrixXi &B 		-	The base matrix of the protograph
+			const std::vector<unsigned int> &P 	-	A vector containing the indices of each
+													of the VNs of the protograph that are
+													punctured
 */
 Protograph::Protograph(const MatrixXi &B, const vector<unsigned int> &P) : BM(B), numVNs(B.cols()), numCNs(B.rows()) {
 	vector<bool> T(B.cols(), true);
@@ -78,6 +176,62 @@ Protograph::Protograph(const MatrixXi &B, const vector<unsigned int> &P) : BM(B)
 
 	calcRate();
 	calcEdges();
+}
+
+/*	Specify which VNs of the protograph are punctured
+	Arguments:
+		Input:
+			const std::vector<bool> &T 		-	A vector containing one boolean value for 
+												each VN of the protograph whose value is TRUE
+												if the bit associated with that is transmitted
+												or FALSE if that bit is punctured
+*/
+void Protograph::setPuncturedVNs(const std::vector<bool> &T)
+{
+	symbolsToTransmit = T;
+
+	size_t max = symbolsToTransmit.size();
+	numPunctured = 0;
+
+	puncturedVNs.resize(max);
+
+	for (unsigned int i = 0; i < max; i++)
+	{
+		if (symbolsToTransmit[i])
+		{
+			puncturedVNs[numPunctured++] = i;
+		}
+	}
+
+	puncturedVNs.resize(numPunctured);
+
+	/* The rate may have changed, so recalculate it */
+	calcRate();
+}
+
+/*	Specify which VNs of the protograph are punctured
+	Arguments:
+		Input:
+			const std::vector<unsigned int> &P 	-	A vector containing the indices of each
+													of the VNs of the protograph that are
+													punctured
+*/
+void Protograph::setPuncturedVNs(const std::vector<unsigned int> &P)
+{
+	vector<bool> T(BM.cols(), true);
+
+	puncturedVNs = P;
+	numPunctured = 0;
+
+	for (vector<unsigned int>::const_iterator it = P.begin(); it != P.end(); ++it){
+		T[*it] = false;
+		numPunctured++;
+	}
+
+	symbolsToTransmit = T;
+
+	/* The rate may have changed, so recalculate it */
+	calcRate();
 }
 
 /* Calculate the rate of the Protograph */
