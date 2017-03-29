@@ -34,12 +34,19 @@ Protograph::Protograph(const string &fn)
 	readFile(fn);
 }
 
+/* 	Read a protograph base matrix from a file - NB: The file must contain only the
+	protograph and blank lines
+	Arguments:
+		Input:
+			const string &fn 	-	The name of the file to be read from
+*/
 void Protograph::readFile(const string &fn)
 {
 	ifstream ifs(fn, ios::in);
 	istringstream iss;
 	string str;
 
+	/* Check that we were able to open the file */
 	if (ifs.fail())
 	{
 		throw PGFileFailure(fn);
@@ -52,6 +59,7 @@ void Protograph::readFile(const string &fn)
 
 	unsigned int CN = 0, VN = 0;
 
+	/* Do a preliminary pass of the file to determine the number of VNs and CNs */
 	while (getline(ifs, str))
 	{
 		cols_this_row = 0;
@@ -80,6 +88,7 @@ void Protograph::readFile(const string &fn)
 		iss.clear();
 	}
 
+	/* Move ifs back to the start of the file */
 	ifs.clear();
 	ifs.seekg(0, ios::beg);
 
@@ -87,6 +96,7 @@ void Protograph::readFile(const string &fn)
 	numVNs = cols;
 	BM.resize(numCNs, numVNs);
 
+	/* Now, do a second pass of the file, reading the contents of the base matrix */
 	while (ifs >> BM(CN, VN))
 	{
 		if (++VN == numVNs)
@@ -102,10 +112,22 @@ void Protograph::readFile(const string &fn)
 	ifs.close();
 }
 
+/* 	Save the protograph base matrix to a file
+	Arguments:
+		Input:
+			const string &fn 	-	The name of the file to be written to
+*/
 void Protograph::saveFile(const string &fn)
 {
 	ofstream ofs(fn, ios::out);
 
+	/* Check that we were able to open the file */
+	if (ofs.fail())
+	{
+		throw PGFileFailure(fn);
+	}	
+
+	/* Write the contents of the matrix to ofs */
 	for (unsigned int CN = 0; CN < numCNs; CN++)
 	{
 		for (unsigned int VN = 0; VN < numVNs-1; VN++)
@@ -118,6 +140,7 @@ void Protograph::saveFile(const string &fn)
 		}
 	}
 
+	/* Flush the contents of ofs and close the file */
 	ofs.flush();
 	ofs.close();
 }

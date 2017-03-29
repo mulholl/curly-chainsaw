@@ -25,8 +25,8 @@ class Protograph{
 		void saveFile(const std::string &);
 		void setPuncturedVNs(const std::vector<bool> &);
 		void setPuncturedVNs(const std::vector<unsigned int> &);
-		void lift(const unsigned int &, const unsigned int &, Eigen::MatrixXi &H);
-		void lift(const unsigned int &, Eigen::MatrixXi &H);
+		void lift(const unsigned int &, const unsigned int &, Eigen::MatrixXi &);
+		void lift(const unsigned int &, Eigen::MatrixXi &);
 	private:
 		/* Private member variables */
 		Eigen::MatrixXi BM; // The base matrix of the protograph
@@ -57,9 +57,11 @@ class Protograph{
 		void AddEdge(const unsigned int &, const unsigned int &, const unsigned int &, std::minstd_rand &, std::vector< std::vector<unsigned int> > &, std::vector<unsigned int> &, std::vector<unsigned int> &, Eigen::MatrixXi &);
 		void CNsForEdgeType(const unsigned int &, const unsigned int &, std::vector<unsigned int> &);
 		bool ValidateLiftedH(const Eigen::MatrixXi &);
-
 };
 
+/*	Exception thrown when an error occurs while trying to lift the protograph to create
+	a parity-check matrix
+*/
 class liftexc : public std::exception
 {
   virtual const char* what() const throw()
@@ -68,6 +70,13 @@ class liftexc : public std::exception
   }
 };
 
+/* 	Exception thrown when there is an issue reading from or writing to a file containing
+	a protograph base matrix
+	Arguments:
+		Input:
+			const std::string &str_in 	-	The name of the file to which this instance 
+											of the exception pertains
+*/
 class PGFileFailure : public std::exception
 {
 public:
