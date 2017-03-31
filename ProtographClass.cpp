@@ -32,6 +32,9 @@ Protograph::Protograph(const MatrixXi &B) : BM(B), numVNs(B.cols()), numCNs(B.ro
 Protograph::Protograph(const string &fn)
 {
 	readFile(fn);
+	numPunctured = 0;
+	calcRate();
+	calcEdges();
 }
 
 /* 	Read a protograph base matrix from a file - NB: The file must contain only the
@@ -263,6 +266,8 @@ void Protograph::calcRate()
 	unsigned int N = numVNs;
 	unsigned int K = N - numCNs;
 
+	std::cout << "N = " << N << ", K = " << K << ", numPunctured = " << numPunctured << std::endl;
+
 	R = (double) K / (N - numPunctured);
 }
 
@@ -271,6 +276,11 @@ void Protograph::calcRate()
 		double 	-	The rate of the protograph
 */
 double Protograph::Rate()
+{
+	return R;
+}
+
+double Protograph::Rate() const
 {
 	return R;
 }
@@ -298,6 +308,11 @@ unsigned int Protograph::Edges()
 	return E;
 }
 
+unsigned int Protograph::Edges() const
+{
+	return E;
+}
+
 /* 	Return a referene to the base matrix of the protograph
 	Return value:
 		const MatrixXi& 	- Reference to the protograph base matrix
@@ -305,6 +320,16 @@ unsigned int Protograph::Edges()
 const MatrixXi& Protograph::BaseMatrix() const
 {
 	return BM;
+}
+
+unsigned int Protograph::BaseMatrix(const unsigned int &i, const unsigned int &j)
+{
+	return BM(i, j);
+}
+
+unsigned int Protograph::BaseMatrix(const unsigned int &i, const unsigned int &j) const
+{
+	return BM(i, j);
 }
 
 /* 	Return the number of VNs in the protograph
@@ -316,12 +341,22 @@ unsigned int Protograph::VNs()
 	return numVNs;
 }
 
+unsigned int Protograph::VNs() const
+{
+	return numVNs;
+}
+
 
 /* 	Return the number of CNs in the protograph
 	Return value:
 		unsigned int 	-	The number of CNs in the protograph
 */
 unsigned int Protograph::CNs()
+{
+	return numCNs;
+}
+
+unsigned int Protograph::CNs() const
 {
 	return numCNs;
 }
@@ -382,6 +417,8 @@ void Protograph::lift(const unsigned int &numCopies, const unsigned int &seed, M
 	{
 		throw liftexc();
 	}
+
+	// SaveLiftedH("H.txt", H);
 }
 
 /* 	Generate an LDPC code by randomly lifting the protograph - this version uses a time
@@ -650,4 +687,101 @@ bool Protograph::ValidateLiftedH(const MatrixXi &H)
 	}
 
 	return true;
+}
+
+/*	Save a lifted parity-check matrix to a file. The coordinates of each non-zero matrix element
+	are written to the file, beginning with the row coordinate, followed by the column
+	coordinate on the next line
+	Arguments:
+		Input:
+			const std::string &fn 		-	The name of the file to be written to
+			const Eigen::MatrixXi &H 	-	The parity-check matrix, stored as a dense matrix
+
+	NB - this and ReadH() don't really belong in the Protograph class and should be
+	removed to a better location
+*/
+int Protograph::SaveLiftedH(const string &fn, const MatrixXi &H)
+{
+	ofstream ofs(fn, ios::out);
+
+	/* Check that we were able to open the file */
+	if (ofs.fail())
+	{
+		return -1;
+	}	
+
+	unsigned int N = H.cols();
+	unsigned int M = H.rows();
+
+	for (unsigned int CN = 0; CN < M; CN++)
+	{
+		for (unsigned int VN = 0; VN < N; VN++)
+		{
+			if (H(CN, VN))
+			{
+				ofs << CN << "\n" << VN << "\n";
+			}
+		}
+	}
+
+	ofs.close();
+
+	return 0;
+}
+
+/*	Read a parity-check matrix from a file. The file must consist only of the coordinates of
+	the non-zero elements, beginning with the row coordinate, followed by the column
+	coordinate on the next line
+	Arguments:
+		Input:
+			const std::string &fn 		-	The name of the file to be read from
+		Output:
+			Eigen::MatrixXi &H 			-	The parity-check matrix, stored as a dense matrix
+
+	NB - this and SaveLiftedH() don't really belong in the Protograph class and should be
+	removed to a better location
+*/
+int Protograph::ReadH(const string &fn, MatrixXi &H)
+{
+	ifstream ifs(fn, ios::in);
+
+	/* Check that we were able to open the file */
+	if (ifs.fail())
+	{
+		return -1;
+	}
+
+	unsigned int CN;
+	unsigned int VN;
+
+	unsigned int max_CN = 0, max_VN = 0; /* Maximum CN and VN numbers */
+
+	while (ifs >> CN >> VN)
+	{
+		max_CN = (CN > max_CN) ? CN : max_CN;
+		max_VN = (VN > max_VN) ? VN : max_VN;
+	}
+
+	/* 	Check that we exited the above loop because we reached the end of the file.
+		If not, there was a problem and we can't continue.
+	*/
+	if (!ifs.eof())
+	{
+		return -2;
+	}
+
+	H = MatrixXi::Zero(max_CN + 1, max_VN + 1);
+
+	/* Move ifs back to the start of the file */
+	ifs.clear();
+	ifs.seekg(0, ios::beg);
+
+	while (ifs >> CN >> VN)
+	{
+		H(CN, VN) = 1;
+	}
+
+	ifs.close();
+
+	return 0;
 }

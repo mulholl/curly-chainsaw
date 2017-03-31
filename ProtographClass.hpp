@@ -20,6 +20,19 @@ class Protograph{
 		Protograph(const Eigen::MatrixXi &, const std::vector<bool> &);
 		Protograph(const Eigen::MatrixXi &, const std::vector<unsigned int> &);
 
+		/* Functions that simply return private member variables */
+		unsigned int VNs();
+		unsigned int VNs() const;
+		unsigned int CNs();
+		unsigned int CNs() const;
+		double Rate();
+		double Rate() const;
+		unsigned int Edges();
+		unsigned int Edges() const;
+		const Eigen::MatrixXi& BaseMatrix() const;
+		unsigned int BaseMatrix(const unsigned int &, const unsigned int &);
+		unsigned int BaseMatrix(const unsigned int &, const unsigned int &) const;
+
 		/* Other functions */
 		void readFile(const std::string &);
 		void saveFile(const std::string &);
@@ -44,19 +57,14 @@ class Protograph{
 		void calcRate();
 		void calcEdges();
 
-		/* Functions that simply return private member variables */
-		unsigned int VNs();
-		unsigned int CNs();
-		double Rate();
-		unsigned int Edges();
-		const Eigen::MatrixXi& BaseMatrix() const;
-
 		/* Functions used by Protograph::lift() */
 		unsigned int NNZ();
 		void liftSetup(const unsigned int &, std::vector< std::vector<unsigned int> > &, std::vector<unsigned int> &, std::vector<unsigned int> &);
 		void AddEdge(const unsigned int &, const unsigned int &, const unsigned int &, std::minstd_rand &, std::vector< std::vector<unsigned int> > &, std::vector<unsigned int> &, std::vector<unsigned int> &, Eigen::MatrixXi &);
 		void CNsForEdgeType(const unsigned int &, const unsigned int &, std::vector<unsigned int> &);
 		bool ValidateLiftedH(const Eigen::MatrixXi &);
+		int SaveLiftedH(const std::string &, const Eigen::MatrixXi &);
+		int ReadH(const std::string &, Eigen::MatrixXi &);
 };
 
 /*	Exception thrown when an error occurs while trying to lift the protograph to create
