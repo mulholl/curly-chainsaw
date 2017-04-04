@@ -1,7 +1,8 @@
 #include <iostream>
-// #include </usr/include/eigen3/Eigen/Dense>
 #include <Eigen/Dense>
 #include "ProtographClass.hpp"
+#include "AListClass.hpp"
+#include "PEXIT_AWGN.hpp"
 
 using namespace std;
 
@@ -12,20 +13,23 @@ int main(void)
 	Eigen::MatrixXi B(3, 6);
 	Eigen::MatrixXi H;
 
-	P = Protograph("test2.txt");
-	P.saveFile("test3.txt");
+	FILE *fp;
+
+	fp = fopen("alist.txt", "w");
 
 	// B << 1 , 2 , 2 , 1 , 1 , 0 , 2 , 1 , 2 , 1 , 1 , 0 , 1 , 1 , 0 , 0 , 0 , 1;
 
 	// cout << "B = \n" << B << endl;
 
-	// P = Protograph(B);
+	P = Protograph("test4.txt");
+	cout << "B = \n" << P.BaseMatrix() << endl;
+	// exit(0);
 
 	for (unsigned int i = 0; i < 1; i++)
 	{
 		try
 		{
-			P.lift(1667, 1, H);
+			P.lift(10, 1, H);
 			cout << "H.rows() = " << H.rows() << "\t\tH.cols() = " << H.cols() << endl;
 		}
 		catch (exception &e)
@@ -34,6 +38,18 @@ int main(void)
 			exit(0);
 		}
 	}
+
+	alist_matrix A(H);
+
+	write_alist(fp, &A);
+
+	// double threshold = PEXIT_Threshold_AWGN(P, dBtoLin(0.0), dBtoLin(5.0), 10);
+
+	// cout << "threshold = " << lintodB(threshold) << " dB (" << threshold << ") (" << dBtoLin(lintodB(threshold)) << ")" << endl;
+
+	// double threshold2 = PEXIT_Sweep_AWGN(P, dBtoLin(0.0), dBtoLin(5.0), 0.02, 10);
+
+	// cout << "threshold2 = " << lintodB(threshold2) << " dB (" << threshold2 << ") (" << dBtoLin(lintodB(threshold2)) << ")" << endl;
 	
 	return 0;
 }

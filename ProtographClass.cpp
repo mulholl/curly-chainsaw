@@ -266,8 +266,6 @@ void Protograph::calcRate()
 	unsigned int N = numVNs;
 	unsigned int K = N - numCNs;
 
-	std::cout << "N = " << N << ", K = " << K << ", numPunctured = " << numPunctured << std::endl;
-
 	R = (double) K / (N - numPunctured);
 }
 
@@ -418,7 +416,7 @@ void Protograph::lift(const unsigned int &numCopies, const unsigned int &seed, M
 		throw liftexc();
 	}
 
-	// SaveLiftedH("H.txt", H);
+	SaveLiftedH("H.txt", H);
 }
 
 /* 	Generate an LDPC code by randomly lifting the protograph - this version uses a time
