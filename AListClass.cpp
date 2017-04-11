@@ -52,11 +52,9 @@ alist_matrix::alist_matrix(MatrixXi &H)
 		{
 			if (H(m, n))
 			{
-				cout << "mlist[" << m << "][" << count << "] = " << n + 1 << endl;
 				mlist[m][count++] = n + 1;
 				if (count >= num_mlist[m])
 				{
-					cout << "Breaking: count = " << count << endl;
 					break;
 				}
 			}
@@ -133,9 +131,12 @@ void write_imatrix( FILE *fp ,  int **m, int l1, int h1, int l2, int h2)
   int i,j;
   
   for (i=l1; i<=h1; i++){
-  	fprintf(fp, "i = %d: ", i);
     for (j=l2; j<=h2; j++)
     {
+    	if (m[i][j] == 0)
+    	{
+    		break;
+    	}
     	fprintf( fp , "%d ",m[i][j]);
   	}
     fprintf(fp , "\n");
